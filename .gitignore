@@ -1,0 +1,125 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+ # Byte-compiled / optimized / DLL files
+ __pycache__/
+ *.py[cod]
+ *$py.class
+ 
+ # C extensions
+ *.so
+ 
+ # Distribution / packaging
+ .Python
+ env/
+ build/
+ develop-eggs/
+ dist/
+ downloads/
+ eggs/
+ .eggs/
+ lib/
+ lib64/
+ parts/
+ sdist/
+ var/
+ wheels/
+ *.egg-info/
+ .installed.cfg
+ *.egg
+ MANIFEST
+ 
+ # Installer logs
+ pip-log.txt
+ pip-delete-this-directory.txt
+ 
+ # Unit test / coverage reports
+ htmlcov/
+ .tox/
+ .nox/
+ .coverage
+ .coverage.*
+ .cache
+ nosetests.xml
+ coverage.xml
+ *.cover
+ *.py,cover
+ .hypothesis/
+ .pytest_cache/
+ 
+ # Jupyter Notebook
+ .ipynb_checkpoints
+ 
+ # pyenv
+ .python-version
+ 
+ # mypy
+ .mypy_cache/
+ .dmypy.json
+ 
+ # Pyre type checker
+ .pyre/
+ 
+ # VS Code
+ .vscode/
+ 
+ # IDEs
+ .idea/
+ 
+ # Logs
+ *.log
+ 
+ # Database
+ *.db
+ *.sqlite3
+ 
+ # Windows
+ Thumbs.db
+ Desktop.ini
+ 
+ # macOS
+ .DS_Store
+ 
+ # Backup files
+ *.bak
+ 
+ # Images and icons (if not needed in repo)
+ *.ico
+ *.png
+ 
+ # Project-specific folders
+ assets/
+ utils/backups/
+ utils/logs/
+ 
+ # Ignore database files
+ database/JJCIMS.accdb
+ database/user_roles_audit.log
+ 
+ # Ignore compiled files
+ *.pyo
+ *.pyd
+ 
+ # Ignore spec files
+ *.spec
+ 
+ # Ignore environment config
+ .env
+ 
+ # Ignore Python virtual environment
+ env/
+ 
+ # Ignore cache
+ utils/cache_manager.py
+ 
+ # Ignore pyvenv config
+ env/pyvenv.cfg
+env/
+*.env
+*.sqlite3
+*.db
+*.log
+.DS_Store
+.vscode/
+.idea/
