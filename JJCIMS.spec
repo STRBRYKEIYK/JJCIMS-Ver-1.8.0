@@ -11,7 +11,6 @@ a = Analysis(
         # Database files
     # Legacy standalone employee DB removed; use database/JJCIMS.accdb as canonical DB
         ('database/JJCIMS.accdb', 'database'),
-        ('database/logs.xlsx', 'database'),
         ('database/Backup', 'database/Backup'),
 
         # Configuration files

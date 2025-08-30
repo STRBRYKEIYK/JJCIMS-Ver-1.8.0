@@ -11,7 +11,7 @@ Comprehensive Windows-based inventory and user management system with role-based
 - Inventory management (Add / Update items modules)
 - Employee vs Admin login flows
 - Encrypted sensitive data using Fernet keys
-- Audit logging to Excel (logs.xlsx) and text logs
+- Audit logging to database tables (emp_logs, adm_logs) and text logs
 - Packaged via PyInstaller for distribution
 
 ## Project Structure (Highlights)
@@ -26,8 +26,7 @@ config/                # Core configuration + encryption key
    gui_config.py
    window_manager.py
 database/
-   JJCIMS.accdb        # Main DB
-   logs.xlsx           # Activity logs
+   JJCIMS.accdb        # Main DB (includes emp_logs, adm_logs tables)
    access_connector.py
    Backup/             # Backup artifacts
 gui/
@@ -84,7 +83,7 @@ Outputs to `dist/`.
 
 - Automatic DB + key backups to `database/Backup/`
 - Use Integrated Admin Settings > Backup/Restore for UI workflow
-- Always include: `JJCIMS.accdb`, `logs.xlsx`, `fernet_key.py`, OTP secrets
+- Always include: `JJCIMS.accdb` (includes logs), `fernet_key.py`, OTP secrets
 
 ## Security Notes
 

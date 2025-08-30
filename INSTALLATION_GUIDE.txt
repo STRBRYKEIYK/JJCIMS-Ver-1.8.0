@@ -205,7 +205,7 @@ STEP 4: DISTRIBUTE
 
 4. DATABASE INITIALIZATION:
    - System automatically creates database structure
-   - Initializes log files (logs.xlsx)
+   - Initializes log tables (emp_logs, adm_logs) in database
    - Sets up encryption keys
    - Creates necessary directories
 
@@ -223,8 +223,7 @@ STEP 4: DISTRIBUTE
 🔐 config/fernet_key.py - Encryption keys
 🔐 config/admin_otp_secret.txt - 2FA secrets
 🗄️ database/JJCFPIS.accdb - Main database
-📊 database/logs.xlsx - System logs
-👥 database/JJCIMS.accdb - Employee database (canonical)
+�️ database/JJCIMS.accdb - Main database (includes emp_logs, adm_logs tables)
 
 ⚠️ IMPORTANT: Back up these files regularly!
 

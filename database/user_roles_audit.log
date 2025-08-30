@@ -1,5 +1,0 @@
-2025-06-27 09:25:29 - INFO - User: test_admin | Action: Load Users | Details: Loaded 5 mock users for testing
-2025-06-27 09:25:50 - INFO - User: test_admin | Action: Role Change | Details: Changed John Doe from Level 3 to Level 2
-2025-06-27 09:25:51 - INFO - User: test_admin | Action: Role Change | Details: Changed John Doe from Level 2 to Level 1
-2025-06-27 09:25:53 - INFO - User: test_admin | Action: Role Change | Details: Changed Jane Smith from Level 2 to Level 3
-2025-06-27 09:25:59 - INFO - User: test_admin | Action: Test Save | Details: Mock save operation performed
