@@ -1,0 +1,257 @@
+=================================================================
+JJC FABRICATION AND PARTS INVENTORY SYSTEM (JJCFPIS)
+INSTALLATION GUIDE
+=================================================================
+
+╔══════════════════════════════════════════════════════════════╗
+║                    QUICK START GUIDE                        ║
+╚══════════════════════════════════════════════════════════════╝
+
+🚀 FOR END USERS (RECOMMENDED):
+   1. Download JJCFPIS.exe from the releases
+   2. Run the executable - No additional setup required!
+   3. System will auto-configure on first launch
+
+🛠️ FOR DEVELOPERS:
+   Follow the detailed installation steps below
+
+╔══════════════════════════════════════════════════════════════╗
+║                  SYSTEM REQUIREMENTS                        ║
+╚══════════════════════════════════════════════════════════════╝
+
+💻 OPERATING SYSTEM:
+   ✓ Windows 10 (version 1903 or later)
+   ✓ Windows 11 (all versions)
+   ✗ macOS/Linux (not supported due to Access database dependency)
+
+🐍 PYTHON REQUIREMENTS (for development):
+   ✓ Python 3.8 or higher
+   ✓ pip package manager
+   ✓ Virtual environment support (recommended)
+
+🗄️ DATABASE REQUIREMENTS:
+   ✓ Microsoft Access Database Engine 2016 Redistributable
+   ✓ 64-bit version recommended
+   Download: https://www.microsoft.com/en-us/download/details.aspx?id=54920
+
+💾 HARDWARE REQUIREMENTS:
+   ✓ RAM: 4GB minimum, 8GB recommended
+   ✓ Storage: 500MB free space
+   ✓ Display: 1024x768 minimum resolution
+
+╔══════════════════════════════════════════════════════════════╗
+║                INSTALLATION METHODS                         ║
+╚══════════════════════════════════════════════════════════════╝
+
+📦 METHOD 1: STANDALONE EXECUTABLE (RECOMMENDED)
+──────────────────────────────────────────────────────────────
+
+This is the easiest method for end users:
+
+1. Download the latest JJCFPIS.exe from releases
+2. Place the executable in your desired folder
+3. Double-click JJCFPIS.exe to launch
+4. The system will automatically:
+   - Create necessary configuration files
+   - Set up the database structure
+   - Generate encryption keys
+   - Initialize the application
+
+✅ ADVANTAGES:
+   - No Python installation required
+   - No dependency management
+   - Portable application
+   - Instant startup
+
+🛠️ METHOD 2: PYTHON SOURCE CODE (DEVELOPERS)
+──────────────────────────────────────────────────────────────
+
+For developers or advanced users who want to modify the code:
+
+STEP 1: PREPARE YOUR ENVIRONMENT
+   1. Install Python 3.8+ from https://python.org
+   2. Verify installation:
+      python --version
+      pip --version
+
+STEP 2: CLONE/DOWNLOAD THE PROJECT
+   1. Download the source code
+   2. Extract to your desired directory
+   3. Open command prompt in the project folder
+
+STEP 3: SET UP VIRTUAL ENVIRONMENT (RECOMMENDED)
+   python -m venv jjcfpis_env
+   
+   # Activate the environment:
+   # Windows:
+   jjcfpis_env\Scripts\activate
+   
+   # You should see (jjcfpis_env) in your command prompt
+
+STEP 4: INSTALL DEPENDENCIES
+   pip install -r requirements.txt
+   
+   # This will install:
+   # - pyodbc (database connectivity)
+   # - cryptography (encryption)
+   # - pyotp (2FA authentication)
+   # - qrcode (QR code generation)
+   # - Pillow (image processing)
+   # - openpyxl (Excel file handling)
+   # - python-dateutil (date utilities)
+   # - packaging (version management)
+   # - pyinstaller (for building exe)
+
+STEP 5: INSTALL DATABASE ENGINE
+   Download and install Microsoft Access Database Engine 2016:
+   https://www.microsoft.com/en-us/download/details.aspx?id=54920
+   
+   ⚠️ IMPORTANT: Choose 64-bit version if using 64-bit Python
+
+STEP 6: RUN THE APPLICATION
+   python main.py
+   
+   🎉 The application should launch with the loading screen!
+
+╔══════════════════════════════════════════════════════════════╗
+║                   TROUBLESHOOTING                           ║
+╚══════════════════════════════════════════════════════════════╝
+
+❌ COMMON ISSUES AND SOLUTIONS:
+
+🔸 "Python not found" Error:
+   - Ensure Python is installed and added to PATH
+   - Try: py -3 main.py instead of python main.py
+
+🔸 "pip not found" Error:
+   - Reinstall Python with pip included
+   - Or download get-pip.py and run: python get-pip.py
+
+🔸 "pyodbc connection failed" Error:
+   - Install Microsoft Access Database Engine 2016
+   - Ensure bit version matches Python (64-bit recommended)
+   - Check if .accdb files are accessible
+
+🔸 "tkinter not found" Error:
+   - Reinstall Python with tkinter included
+   - On some Linux systems: sudo apt-get install python3-tk
+
+🔸 "Pillow installation failed" Error:
+   - Update pip: pip install --upgrade pip
+   - Install Visual C++ Build Tools if on Windows
+   - Try: pip install --upgrade Pillow
+
+🔸 "cryptography installation failed" Error:
+   - Update pip and setuptools: pip install --upgrade pip setuptools
+   - Install Visual C++ Build Tools (Windows)
+   - Try: pip install --only-binary=cryptography cryptography
+
+🔸 Application doesn't start:
+   - Check Python version: python --version (must be 3.8+)
+   - Verify all dependencies: pip list
+   - Check for error messages in terminal
+   - Ensure database files are present
+
+╔══════════════════════════════════════════════════════════════╗
+║                  BUILDING EXECUTABLE                        ║
+╚══════════════════════════════════════════════════════════════╝
+
+🔨 TO BUILD YOUR OWN EXECUTABLE:
+
+STEP 1: ENSURE PYINSTALLER IS INSTALLED
+   pip install pyinstaller
+
+STEP 2: BUILD THE EXECUTABLE
+   pyinstaller JJCFPIS.spec
+   
+   # This will:
+   # - Read the configuration from JJCFPIS.spec
+   # - Include all necessary files and dependencies
+   # - Create a standalone executable
+   # - Output to dist/JJCFPIS/ folder
+
+STEP 3: TEST THE EXECUTABLE
+   cd dist/JJCFPIS
+   JJCFPIS.exe
+   
+   ✅ The executable should run independently!
+
+STEP 4: DISTRIBUTE
+   - Copy the entire dist/JJCFPIS folder
+   - Share JJCFPIS.exe with end users
+   - No Python installation required on target machines
+
+╔══════════════════════════════════════════════════════════════╗
+║                    FIRST-TIME SETUP                         ║
+╚══════════════════════════════════════════════════════════════╝
+
+🎬 WHEN YOU FIRST RUN JJCFPIS:
+
+1. LOADING SCREEN:
+   - Beautiful animated loading with Windows and JJCFPIS logos
+   - CRT-style effects and scanline animations
+   - Takes about 8 seconds to load
+
+2. WELCOME SCREEN:
+   - Choose between Employee or Admin login
+   - Employee login for regular users
+   - Admin login for system administrators
+
+3. ADMIN SETUP (First Time):
+   - Create administrator account
+   - Set up two-factor authentication (2FA)
+   - Scan QR code with authenticator app
+   - Configure system settings
+
+4. DATABASE INITIALIZATION:
+   - System automatically creates database structure
+   - Initializes log files (logs.xlsx)
+   - Sets up encryption keys
+   - Creates necessary directories
+
+5. READY TO USE:
+   - Add inventory items
+   - Create employee accounts
+   - Start managing your fabrication processes!
+
+╔══════════════════════════════════════════════════════════════╗
+║                   CONFIGURATION FILES                       ║
+╚══════════════════════════════════════════════════════════════╝
+
+📁 KEY FILES CREATED AUTOMATICALLY:
+
+🔐 config/fernet_key.py - Encryption keys
+🔐 config/admin_otp_secret.txt - 2FA secrets
+🗄️ database/JJCFPIS.accdb - Main database
+📊 database/logs.xlsx - System logs
+👥 database/JJCIMS.accdb - Employee database (canonical)
+
+⚠️ IMPORTANT: Back up these files regularly!
+
+╔══════════════════════════════════════════════════════════════╗
+║                      SUPPORT                                ║
+╚══════════════════════════════════════════════════════════════╝
+
+🆘 NEED HELP?
+
+📧 Technical Support: Contact KWF (Openwilheilmer)
+📚 Documentation: See SYSTEM_INFO.txt
+🐛 Bug Reports: Contact development team
+💡 Feature Requests: Contact development team
+
+📞 For JJC Engineering Works and General Services:
+   Contact your system administrator or IT department
+
+╔══════════════════════════════════════════════════════════════╗
+║                    VERSION INFORMATION                      ║
+╚══════════════════════════════════════════════════════════════╝
+
+📋 CURRENT VERSION: 1.0.0
+📅 LAST UPDATED: July 2, 2025
+🔄 UPDATE METHOD: Contact development team for new versions
+
+=================================================================
+END OF INSTALLATION GUIDE
+=================================================================
+
+Happy fabricating with JJCFPIS! 🔧⚙️🏭

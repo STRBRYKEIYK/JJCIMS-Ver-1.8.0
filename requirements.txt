@@ -1,0 +1,90 @@
+######################################################################
+# requirements.txt for JJCIMS (JJC Inventory Management System)
+# --------------------------------------------------------------------
+# Complete dependency list for production deployment
+######################################################################
+
+
+# === CORE DATABASE CONNECTIVITY ===
+pyodbc>=4.0.35
+# Microsoft Access database connectivity (.accdb files)
+
+
+# === SECURITY & ENCRYPTION ===
+cryptography>=41.0.0
+# Fernet encryption, key management
+
+
+# === TWO-FACTOR AUTHENTICATION ===
+pyotp>=2.8.0
+qrcode>=7.4.2
+
+
+# === IMAGE PROCESSING & GUI ===
+Pillow>=11.3.0
+# Image manipulation, logo processing, effects
+
+
+# === EXCEL FILE HANDLING ===
+openpyxl>=3.1.0
+
+
+# === DATE AND TIME UTILITIES ===
+numpy>=1.24.0
+
+# === DATE AND TIME UTILITIES ===
+python-dateutil>=2.8.2
+# Extended date/time parsing and manipulation
+# Used by: gui/functions/emplydash_f/, timestamp handling, log entries
+
+# === DATA ANALYSIS & PROCESSING ===
+pandas>=2.0.0
+# Data manipulation and analysis library
+# Used by: gui/functions/admdash_f/Logs/vw_logs.py, gui/functions/admdash_f/admdash_imp.py
+# Required for: log data processing, Excel data analysis, admin dashboard features
+numpy>=1.24.0
+# Numerical computing library (dependency of pandas)
+# Used by: gui/employee_dashboard.py, gui/admin_dashboard.py
+# Required for: numerical operations, data array handling
+
+
+# === AUDIO SYSTEM ===
+pygame>=2.5.0
+
+
+# === ADDITIONAL UTILITIES ===
+packaging>=23.0
+
+
+# === NATIVE DRAG-AND-DROP (OPTIONAL BUT RECOMMENDED) ===
+tkinterdnd2>=0.4.2
+# Enables OS-native drag-and-drop in Tkinter (used in Import screen)
+
+
+# === DEVELOPMENT & BUILDING ===
+pyinstaller>=5.13.0
+
+
+# === LOGGING & SYSTEM UTILITIES ===
+colorama>=0.4.6         # For colored terminal output (optional, improves CLI UX)
+loguru>=0.7.2           # Advanced logging (if used in utils or main)
+
+# === OPTIONAL BUT RECOMMENDED ===
+# These are typically included with Python but listed for completeness
+# tkinter - GUI framework (built-in with Python)
+# Used by: All GUI components, main interface framework
+# threading - Multi-threading support (built-in with Python)
+# pathlib - Modern path handling (built-in with Python 3.4+)
+# hashlib - Cryptographic hashing (built-in with Python)
+
+
+# === INSTALLATION NOTES ===
+# Install all dependencies with: pip install -r requirements.txt
+# For development: pip install -r requirements.txt
+# For building executable: pyinstaller JJCIMS.spec
+
+
+# === COMPATIBILITY ===
+# Python 3.8+ required
+# Windows 10/11 recommended for full Access database support
+# Microsoft Access Database Engine 2016+ required for .accdb files
