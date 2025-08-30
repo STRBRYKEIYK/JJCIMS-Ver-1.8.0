@@ -9,58 +9,36 @@ a = Analysis(
     binaries=[],
     datas=[
         # Database files
-    # Legacy standalone employee DB removed; use database/JJCIMS.accdb as canonical DB
-        ('database/JJCIMS.accdb', 'database'),
-        ('database/Backup', 'database/Backup'),
+    # Legacy standalone employee DB removed; use backend/database/JJCIMS.accdb as canonical DB
+        ('backend/database/JJCIMS.accdb', 'backend/database'),
+        ('backend/database/Backup', 'backend/database/Backup'),
 
         # Configuration files
-        ('gui/config/fernet_key.py', 'gui/config'),
-        ('config/fernet_key.py', 'config'),
-        ('config/admin_otp_secret.txt', 'config'),
-        ('config/code_hashes.txt', 'config'),
-        ('config/code_security.key', 'config'),
-        ('config/backup_restore_status.json', 'config'),
-        ('config/gui_config.py', 'config'),
-        ('config/performance_config.py', 'config'),
-        ('config/window_manager.py', 'config'),
+        ('backend/config/fernet_key.py', 'backend/config'),
+        ('backend/config/admin_otp_secret.txt', 'backend/config'),
+        ('backend/config/code_hashes.txt', 'backend/config'),
+        ('backend/config/code_security.key', 'backend/config'),
+        ('backend/config/backup_restore_status.json', 'backend/config'),
+        ('backend/config/gui_config.py', 'backend/config'),
+        ('backend/config/performance_config.py', 'backend/config'),
+        ('backend/config/window_manager.py', 'backend/config'),
 
         # Assets directory (all images and subdirectories)
-        ('assets', 'assets'),
-        ('assets/upi_assets', 'assets/upi_assets'),
-        ('assets/ani_assets', 'assets/ani_assets'),
-        ('assets/bnr_assets', 'assets/bnr_assets'),
-        ('assets/bnr_assets/bu_assets', 'assets/bnr_assets/bu_assets'),
-        ('assets/bnr_assets/r_assets', 'assets/bnr_assets/r_assets'),
-        ('assets/tfa_su_assets', 'assets/tfa_su_assets'),
-        ('assets/sett_assets', 'assets/sett_assets'),
-        ('assets/Pw_rst_assets', 'assets/Pw_rst_assets'),
-        ('assets/adm_sett_2fa_setup_assets', 'assets/adm_sett_2fa_setup_assets'),
-        ('assets/adm_sett_2fa_setup_assets/step_1', 'assets/adm_sett_2fa_setup_assets/step_1'),
-        ('assets/adm_sett_2fa_setup_assets/step_2', 'assets/adm_sett_2fa_setup_assets/step_2'),
-        ('assets/adm_sett_2fa_setup_assets/step_3', 'assets/adm_sett_2fa_setup_assets/step_3'),
-        ('assets/adm_sett_2fa_setup_assets/step_4', 'assets/adm_sett_2fa_setup_assets/step_4'),
-        ('assets/adm_sett_2fa_setup_assets/step_5', 'assets/adm_sett_2fa_setup_assets/step_5'),
+        ('frontend/assets', 'frontend/assets'),
 
         # Icons directory (all icon files)
-        ('icons', 'icons'),
+        ('frontend/icons', 'frontend/icons'),
 
         # Application icon files
         ('JJCIMS(2).ico', '.'),
         ('JJCIMS(2).png', '.'),
 
         # GUI modules and functions (entire directories)
-        ('gui', 'gui'),
-        ('gui/functions', 'gui/functions'),
-        ('gui/config', 'gui/config'),
-        ('utils', 'utils'),
-        ('utils/assets', 'utils/assets'),
-        ('utils/backups', 'utils/backups'),
-        ('utils/config', 'utils/config'),
-        ('utils/database', 'utils/database'),
-        ('utils/gui', 'utils/gui'),
-        ('utils/logs', 'utils/logs'),
-        ('models', 'models'),
-        ('config', 'config'),
+        ('frontend/gui', 'frontend/gui'),
+        # Backend modules
+        ('backend/utils', 'backend/utils'),
+        ('backend/database', 'backend/database'),
+        ('backend/config', 'backend/config'),
 
         # Environment files
         ('env', 'env'),
@@ -102,54 +80,54 @@ a = Analysis(
         'shutil', 'sys', 'os',
         
         # Main GUI modules
-        'gui', 'gui.admin_dashboard', 'gui.employee_dashboard', 'gui.admin_login', 
-        'gui.employee_login', 'gui.loading_screen', 'gui.globals',
+        'frontend.gui', 'frontend.gui.admin_dashboard', 'frontend.gui.employee_dashboard', 'frontend.gui.admin_login', 
+        'frontend.gui.employee_login', 'frontend.gui.loading_screen', 'frontend.gui.globals',
         
         # Admin dashboard core functions
-        'gui.functions.admdash_f.admdash_imp',
-        'gui.functions.admdash_f.bttn_tgl',
-        'gui.functions.admdash_f.checkbox_treeview',
-        'gui.functions.admdash_f.tab_buttons',
-        'gui.functions.admdash_f.table_utils',
-        'gui.functions.admdash_f.tooltip_utils',
-        'gui.functions.admdash_f.user_roles_manager',
-        'gui.functions.admdash_f.draft_manager',
-        'gui.functions.admdash_f.integrated_adm_sett',
+        'frontend.gui.functions.admdash_f.admdash_imp',
+        'frontend.gui.functions.admdash_f.bttn_tgl',
+        'frontend.gui.functions.admdash_f.checkbox_treeview',
+        'frontend.gui.functions.admdash_f.tab_buttons',
+        'frontend.gui.functions.admdash_f.table_utils',
+        'frontend.gui.functions.admdash_f.tooltip_utils',
+        'frontend.gui.functions.admdash_f.user_roles_manager',
+        'frontend.gui.functions.admdash_f.draft_manager',
+        'frontend.gui.functions.admdash_f.integrated_adm_sett',
         
         # Material List (ML) functions
-        'gui.functions.admdash_f.ML.add_items', 'gui.functions.admdash_f.ML.delete_items',
-        'gui.functions.admdash_f.ML.search_bar', 'gui.functions.admdash_f.ML.stats_pnl',
-        'gui.functions.admdash_f.ML.update_items', 'gui.functions.admdash_f.ML.view_items_treeview',
+        'frontend.gui.functions.admdash_f.ML.add_items', 'frontend.gui.functions.admdash_f.ML.delete_items',
+        'frontend.gui.functions.admdash_f.ML.search_bar', 'frontend.gui.functions.admdash_f.ML.stats_pnl',
+        'frontend.gui.functions.admdash_f.ML.update_items', 'frontend.gui.functions.admdash_f.ML.view_items_treeview',
         
         # Logs functions
-        'gui.functions.admdash_f.Logs.vw_logs',
+        'frontend.gui.functions.admdash_f.Logs.vw_logs',
         
         # View Restock List (VRL) functions
-        'gui.functions.admdash_f.vrl',
+        'frontend.gui.functions.admdash_f.vrl',
         
         # Two-Factor Authentication
-        'gui.functions.admdash_f.tfas.admin_2fa', 'gui.functions.admdash_f.tfas.setup_2fa_utils',
+        'frontend.gui.functions.admdash_f.tfas.admin_2fa', 'frontend.gui.functions.admdash_f.tfas.setup_2fa_utils',
         
         # Style functions
-        'gui.functions.style.admscrl',
+        'frontend.gui.functions.style.admscrl',
         
         # Employee dashboard functions
-        'gui.functions.emplydash_f.emplydash_imp', 'gui.functions.emplydash_f.emplydash_utils',
-        'gui.functions.emplydash_f.checkout_win', 'gui.functions.emplydash_f.checkbox_treeview',
-        'gui.functions.emplydash_f.utilities',
+        'frontend.gui.functions.emplydash_f.emplydash_imp', 'frontend.gui.functions.emplydash_f.emplydash_utils',
+        'frontend.gui.functions.emplydash_f.checkout_win', 'frontend.gui.functions.emplydash_f.checkbox_treeview',
+        'frontend.gui.functions.emplydash_f.utilities',
         
         # Database and backend
-        'database.access_connector', 
+        'backend.database.access_connector', 
         
         # Utility modules
-        'utils.helpers', 'utils.image_effects', 'utils.code_security', 
-        'utils.cache_manager', 'utils.image_manager', 'utils.image_optimizer',
-        'utils.label_effects', 'utils.notification_manager', 'utils.window_icon',
-        'utils.font_utils',
+        'backend.utils.helpers', 'backend.utils.image_effects', 'backend.utils.code_security', 
+        'backend.utils.cache_manager', 'backend.utils.image_manager', 'backend.utils.image_optimizer',
+        'backend.utils.label_effects', 'backend.utils.notification_manager', 'backend.utils.window_icon',
+        'backend.utils.font_utils',
         
         # Configuration modules
-        'config.gui_config', 'config.window_manager', 'config.fernet_key',
-        'config.performance_config',
+        'backend.config.gui_config', 'backend.config.window_manager', 'backend.config.fernet_key',
+        'backend.config.performance_config',
         
         # Model classes
         'models.item',

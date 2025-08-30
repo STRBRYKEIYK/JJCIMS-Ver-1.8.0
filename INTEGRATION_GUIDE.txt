@@ -10,7 +10,7 @@ Replace your existing AdminSettings import in admin_dashboard.py:
 from gui.functions.admdash_f.adm_sett import AdminSettings
 
 # To this:
-from gui.functions.admdash_f.integrated_adm_sett import IntegratedAdminSettings as AdminSettings
+from frontend.gui.functions.admdash_f.integrated_adm_sett import IntegratedAdminSettings as AdminSettings
 ```
 
 ### Option 2: Test Both Versions
@@ -18,8 +18,8 @@ Keep both versions and test them separately:
 
 ```python
 # In your admin_dashboard.py or wherever you create AdminSettings
-from gui.functions.admdash_f.adm_sett import AdminSettings as OriginalAdminSettings
-from gui.functions.admdash_f.integrated_adm_sett import IntegratedAdminSettings
+from frontend.gui.functions.admdash_f.adm_sett import AdminSettings as OriginalAdminSettings
+from frontend.gui.functions.admdash_f.integrated_adm_sett import IntegratedAdminSettings
 
 # Use the integrated version
 self.admin_settings = IntegratedAdminSettings(self)
@@ -40,7 +40,7 @@ You can migrate section by section by modifying the existing adm_sett.py:
 1. **Clean UI**: Uses the professional design from new_adm_sett.py
 2. **Full Functionality**: Maintains all working features from adm_sett.py
 3. **Better Organization**: Proper separation of UI and logic
-4. **Consistent Branding**: Uses JJCIMS VER 1.5.0 branding
+4. **Consistent Branding**: Uses JJCIMS VER 1.8.0 branding
 5. **Error Handling**: Includes fallbacks for missing assets
 
 ## Features Included:
@@ -50,7 +50,7 @@ You can migrate section by section by modifying the existing adm_sett.py:
 ✅ User Roles management
 ✅ Import/Export capabilities
 ✅ Backup/Restore functionality
-✅ About section with version 1.5.0
+✅ About section with version 1.8.0
 ✅ Window controls (close, minimize, fullscreen)
 ✅ Professional UI layout
 ✅ Asset loading with fallbacks
@@ -67,7 +67,7 @@ def open_settings(self):
 ```
 
 The integrated version automatically handles:
-- Loading button images from assets/sett_assets/
+- Loading button images from frontend/assets/sett_assets/
 - Creating fallback text buttons if images are missing
 - Proper window management and controls
 - Section switching and content management

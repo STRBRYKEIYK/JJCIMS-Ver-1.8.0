@@ -18,31 +18,52 @@ Comprehensive Windows-based inventory and user management system with role-based
 
 ```text
 main.py                # Entry point
-assets/                # Images and UI assets
-config/                # Core configuration + encryption key
-   fernet_key.py
-   admin_otp_secret.txt
-   performance_config.py
-   gui_config.py
-   window_manager.py
-database/
-   JJCIMS.accdb        # Main DB (includes emp_logs, adm_logs tables)
-   access_connector.py
-   Backup/             # Backup artifacts
-gui/
-   admin_dashboard.py
-   employee_dashboard.py
-   admin_login.py
-   employee_login.py
-   functions/
-      admdash_f/
-         integrated_adm_sett.py    # Integrated admin settings hub
-         tfas/                     # 2FA setup + wizard
-            tfa_su_wizard.py
-            tfa_su_sett.py
-      emplydash_f/
-         checkout_win.py
-utils/               # Helpers (image mgmt, notifications, crypto wrappers)
+backend/               # Backend components
+├── database/          # Database connectivity and queries
+│   ├── JJCIMS.accdb   # Main DB (includes emp_logs, adm_logs tables)
+│   ├── access_connector.py
+│   └── queries.py
+├── config/            # Core configuration + encryption keys
+│   ├── fernet_key.py
+│   ├── admin_otp_secret.txt
+│   ├── performance_config.py
+│   ├── gui_config.py
+│   └── window_manager.py
+└── utils/             # Backend utilities
+    ├── helpers.py
+    ├── image_effects.py
+    ├── code_security.py
+    ├── cache_manager.py
+    ├── image_manager.py
+    ├── image_optimizer.py
+    ├── label_effects.py
+    ├── notification_manager.py
+    ├── window_icon.py
+    └── font_utils.py
+
+frontend/              # Frontend components
+├── gui/               # GUI modules and functions
+│   ├── admin_dashboard.py
+│   ├── employee_dashboard.py
+│   ├── admin_login.py
+│   ├── employee_login.py
+│   ├── functions/
+│   │   ├── admdash_f/
+│   │   │   ├── integrated_adm_sett.py    # Integrated admin settings hub
+│   │   │   ├── tfas/                     # 2FA setup + wizard
+│   │   │   │   ├── tfa_su_wizard.py
+│   │   │   │   └── tfa_su_sett.py
+│   │   │   └── ML/                       # Material List functions
+│   │   └── emplydash_f/
+│   │       └── checkout_win.py
+│   └── config/         # GUI-specific configuration
+├── assets/            # Images and UI assets
+└── icons/             # Application icons
+
+models/                # Data models
+├── item.py
+
+env/                   # Virtual environment
 ```
 
 ## 2FA System Overview
@@ -113,7 +134,7 @@ Internal system for JJC Engineering Works and General Services. Distribution res
 
 ## Version
 
-Current: 1.0.0 (see `version_info.txt`)
+Current: 1.8.0 (see `version_info.txt`)
 
 ---
 

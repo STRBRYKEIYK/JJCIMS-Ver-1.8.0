@@ -35,16 +35,16 @@ numpy>=1.24.0
 # === DATE AND TIME UTILITIES ===
 python-dateutil>=2.8.2
 # Extended date/time parsing and manipulation
-# Used by: gui/functions/emplydash_f/, timestamp handling, log entries
+# Used by: frontend/gui/functions/emplydash_f/, timestamp handling, log entries
 
 # === DATA ANALYSIS & PROCESSING ===
 pandas>=2.0.0
 # Data manipulation and analysis library
-# Used by: gui/functions/admdash_f/Logs/vw_logs.py, gui/functions/admdash_f/admdash_imp.py
+# Used by: frontend/gui/functions/admdash_f/Logs/vw_logs.py, frontend/gui/functions/admdash_f/admdash_imp.py
 # Required for: log data processing, Excel data analysis, admin dashboard features
 numpy>=1.24.0
 # Numerical computing library (dependency of pandas)
-# Used by: gui/employee_dashboard.py, gui/admin_dashboard.py
+# Used by: frontend/gui/employee_dashboard.py, frontend/gui/admin_dashboard.py
 # Required for: numerical operations, data array handling
 
 
