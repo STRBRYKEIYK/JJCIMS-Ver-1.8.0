@@ -4,6 +4,8 @@ import os
 import threading
 import time
 from dotenv import load_dotenv
+from backend.database import get_connector
+from backend.database import queries
 
 # Load environment variables
 load_dotenv()
@@ -11,9 +13,7 @@ load_dotenv()
 # Dynamically set database type using environment variable
 os.environ["JJCIMS_DB_TYPE"] = "mysql"  # Use "access" for local file-based or "mysql" for API
 
-# Import connector after setting environment variable
-from backend.database import get_connector
-from backend.database import queries
+
 
 class MultiClientDashboard(tk.Tk):
     def __init__(self):

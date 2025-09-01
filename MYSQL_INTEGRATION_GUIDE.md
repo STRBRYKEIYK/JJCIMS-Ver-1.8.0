@@ -13,7 +13,7 @@ The original JJCIMS used a local Microsoft Access database (JJCIMS.accdb) with d
 
 ## Architecture
 
-```
+```graph
 ┌───────────────────┐          ┌──────────────────┐          ┌────────────────┐
 │                   │          │                  │          │                │
 │ JJCIMS Client    │  HTTP/S  │  FastAPI Server  │   SQL    │  MySQL Server  │
@@ -27,6 +27,7 @@ The original JJCIMS used a local Microsoft Access database (JJCIMS.accdb) with d
 ### 1. Set Up MySQL Database
 
 1. Install MySQL Server on your central server
+
    ```bash
    # Ubuntu/Debian
    sudo apt update
@@ -37,6 +38,7 @@ The original JJCIMS used a local Microsoft Access database (JJCIMS.accdb) with d
    ```
 
 2. Create database and user
+
    ```sql
    CREATE DATABASE jjcims_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    CREATE USER 'jjcims_user'@'%' IDENTIFIED BY 'your_secure_password';
@@ -47,6 +49,7 @@ The original JJCIMS used a local Microsoft Access database (JJCIMS.accdb) with d
 ### 2. Deploy FastAPI Server
 
 1. Create a virtual environment
+
    ```bash
    python -m venv env-api
    source env-api/bin/activate  # Linux/Mac
@@ -54,6 +57,7 @@ The original JJCIMS used a local Microsoft Access database (JJCIMS.accdb) with d
    ```
 
 2. Install dependencies
+
    ```bash
    cd backend/api
    pip install -r requirements.txt
@@ -64,17 +68,20 @@ The original JJCIMS used a local Microsoft Access database (JJCIMS.accdb) with d
    - See `.env` file in the root directory for reference
 
 4. Initialize the database
+
    ```python
    from main import Base, engine
    Base.metadata.create_all(bind=engine)
    ```
 
 5. Run the server
+
    ```bash
    uvicorn main:app --host 0.0.0.0 --port 8000
    ```
 
 6. For production, use gunicorn with uvicorn workers:
+
    ```bash
    gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8000
    ```
@@ -88,6 +95,7 @@ You can use one of these approaches to migrate your data:
 3. **Manual SQL creation**: Generate SQL from Access schema and import to MySQL
 
 Example of API-based migration script:
+
 ```python
 from backend.database import get_connector
 import os
@@ -111,12 +119,14 @@ for item in items:
 ### 4. Configure Clients
 
 1. Install client requirements:
+
    ```bash
    pip install python-dotenv requests
    ```
 
 2. Configure environment to use MySQL:
-   ```
+
+   ```idk
    # .env file
    JJCIMS_DB_TYPE=mysql
    JJCIMS_API_URL=http://your-server-ip:8000
@@ -132,19 +142,22 @@ for item in items:
 ## Troubleshooting
 
 ### Connection Issues
+
 - Check that the API server is running
 - Ensure the API URL in .env is correct
 - Test connectivity with: `curl http://your-server-ip:8000/items/`
 
 ### Data Migration Issues
+
 - Verify table schemas match between Access and MySQL
 - Check character encoding (use utf8mb4 in MySQL)
 - Handle data type differences between Access and MySQL
 
 ### API Errors
+
 - Check FastAPI logs for detailed error messages
 - Verify that all API endpoints are properly implemented
-- Test endpoints using the Swagger UI: http://your-server-ip:8000/docs
+- Test endpoints using the Swagger UI: `http://your-server-ip:8000/docs`
 
 ## Live Updates for Multi-Computer Access
 
@@ -159,6 +172,7 @@ The FastAPI-based architecture naturally supports multi-computer access across d
 To support real-time updates across clients:
 
 1. Add WebSocket endpoint to FastAPI:
+
    ```python
    from fastapi import WebSocket, WebSocketDisconnect
    
@@ -192,6 +206,7 @@ To support real-time updates across clients:
    ```
 
 2. Broadcast changes after database modifications:
+
    ```python
    @app.post("/items/", response_model=Item)
    async def create_item(item: ItemCreate, db: Session = Depends(get_db)):
@@ -210,6 +225,7 @@ To support real-time updates across clients:
    ```
 
 3. Connect from client:
+
    ```python
    import websocket
    import json
@@ -235,6 +251,6 @@ To support real-time updates across clients:
 
 ## Additional Resources
 
-- FastAPI Documentation: https://fastapi.tiangolo.com/
-- MySQL Documentation: https://dev.mysql.com/doc/
-- WebSockets with FastAPI: https://fastapi.tiangolo.com/advanced/websockets/
+- FastAPI Documentation: `https://fastapi.tiangolo.com/`
+- MySQL Documentation: `https://dev.mysql.com/doc/`
+- WebSockets with FastAPI: `https://fastapi.tiangolo.com/advanced/websockets/`

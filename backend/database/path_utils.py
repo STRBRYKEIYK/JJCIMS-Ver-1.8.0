@@ -9,13 +9,14 @@ def resolve_db_path(explicit: str | None = None, filename: str = "JJCIMS.accdb")
     Search Order (first existing path wins):
       1. explicit argument (if provided and exists)
       2. env var JJCIMS_DB (must exist)
-      3. PyInstaller runtime extraction dir (sys._MEIPASS)/database/<filename>
-      4. Directory of the executable (PyInstaller) /database/<filename>
-      5. Directory of the executable (PyInstaller) /<filename>
-      6. utils.helpers.get_app_dir()/database/<filename> (if callable & exists)
-      7. Module's parent directory (this file)/<filename>
-      8. Module's parent directory /database/<filename>
-      9. Upward directory search from CWD for a 'database/<filename>' or '<filename>'
+      3. backend/database/<filename> (canonical project structure)
+      4. PyInstaller runtime extraction dir (sys._MEIPASS)/database/<filename>
+      5. Directory of the executable (PyInstaller) /database/<filename>
+      6. Directory of the executable (PyInstaller) /<filename>
+      7. utils.helpers.get_app_dir()/database/<filename> (if callable & exists)
+      8. Module's parent directory (this file)/<filename>
+      9. Module's parent directory /database/<filename>
+      10. Upward directory search from CWD for a 'database/<filename>' or '<filename>'
 
     If none of the candidates exist, the final fallback returned is the module
     local database/<filename> (it may not yet exist).
@@ -34,7 +35,12 @@ def resolve_db_path(explicit: str | None = None, filename: str = "JJCIMS.accdb")
     # 2 env var
     _add(os.environ.get("JJCIMS_DB"))
 
-    # 3-5 PyInstaller contexts
+    # 3 canonical project structure (backend/database)
+    here = Path(__file__).parent
+    # Check if this file is in backend/database directory
+    _add(here / filename)
+    
+    # 4-6 PyInstaller contexts
     meipass = getattr(sys, "_MEIPASS", None)  # type: ignore[attr-defined]
     if meipass:
         _add(Path(meipass) / "database" / filename)

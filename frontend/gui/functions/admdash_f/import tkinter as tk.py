@@ -1,10 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
-import pyodbc
 import pyotp
-import os
-from backend.database import get_db_path
+from backend.database import get_connector
 # Sound imports removed
 
 
@@ -659,23 +657,16 @@ class UserRolesManager:
         self.user_tree.heading("Access Level", text="Access Level ↕")
 
         try:
-            # Use canonical database path instead of legacy standalone Employee List.accdb
-            db_path = get_db_path()
-            print(f"[DEBUG] Database path: {db_path}")
-
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-                f"DBQ={db_path};"
-            )
-
-            conn = pyodbc.connect(conn_str)
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT [Last Name], [First Name],  [Middle Name], [Username], [Access Level] FROM [Emp_List] ORDER BY [Last Name], [First Name]"
+            # Use the centralized connector to access the database
+            connector = get_connector()
+            
+            # Query the database using the connector
+            rows = connector.fetchall(
+                "SELECT [Last Name], [First Name], [Middle Name], [Username], [Access Level] FROM [Emp_List] ORDER BY [Last Name], [First Name]"
             )
 
             row_count = 0
-            for row in cursor.fetchall():
+            for row in rows:
                 last_name = row[0] or ""
                 first_name = row[1] or ""
                 middle_name = row[2] or ""
@@ -698,8 +689,7 @@ class UserRolesManager:
                 row_count += 1
 
             print(f"[DEBUG] Loaded {row_count} user records")
-            cursor.close()
-            conn.close()
+            connector.close()
         except Exception as e:
             print(f"[DEBUG] Error loading user data: {e}")
             try:
@@ -708,13 +698,8 @@ class UserRolesManager:
                 pass
         finally:
             try:
-                if "cursor" in locals() and not cursor.connection.closed:
-                    cursor.close()
-            except Exception:
-                pass
-            try:
-                if "conn" in locals():
-                    conn.close()
+                if 'connector' in locals() and connector:
+                    connector.close()
             except Exception:
                 pass
 
@@ -747,26 +732,26 @@ class UserRolesManager:
 
         print(f"[DEBUG] Found {len(changes)} changes to save (test mode)")
 
-        conn = None
         try:
-            db_path = get_db_path()
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};" f"DBQ={db_path};"
-            )
-            print("[DEBUG] Connecting to database (test mode)...")
-            conn = pyodbc.connect(conn_str)
-            cursor = conn.cursor()
+            # Use the connector
+            connector = get_connector()
+            print("[DEBUG] Connector initialized (test mode)...")
+            
+            # Apply changes
             for i, change in enumerate(changes):
                 print(
                     f"[DEBUG] Processing change {i + 1}/{len(changes)}: {change['username']} -> {change['new_level']}"
                 )
-                cursor.execute(
+                connector.execute_query(
                     "UPDATE [Emp_list] SET [Access Level]=? WHERE [Username]=?",
                     (change["new_level"], change["username"]),
                 )
-                conn.commit()
-            cursor.close()
+            
+            # Close the connector
+            connector.close()
             print("[DEBUG] Test save completed successfully")
+            
+            # Show success message
             messagebox.showinfo(
                 "Success", f"Successfully updated {len(changes)} user(s) (test mode)."
             )
@@ -775,12 +760,12 @@ class UserRolesManager:
             print(f"[DEBUG] Test save error: {e}")
             messagebox.showerror("Error", f"Failed to save changes: {e}")
         finally:
-            if conn:
-                try:
-                    conn.close()
+            try:
+                if 'connector' in locals() and connector:
+                    connector.close()
                     print("[DEBUG] Test database connection closed")
-                except Exception as e:
-                    print(f"[DEBUG] Error closing test db connection: {e}")
+            except Exception as e:
+                print(f"[DEBUG] Error closing test db connection: {e}")
 
     def save_changes(self):
         """Save changes to user access levels"""
@@ -864,18 +849,11 @@ class UserRolesManager:
             if not self.authenticate_admin_promotions(promotion_changes):
                 return
 
-        # Apply changes to database
-        conn = None
+        # Apply changes to database using the connector
         try:
-            db_path = get_db_path()
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-                f"DBQ={db_path};"
-            )
-
-            print("[DEBUG] Connecting to database for save operation...")
-            conn = pyodbc.connect(conn_str)
-            cursor = conn.cursor()
+            # Get the database connector
+            connector = get_connector()
+            print("[DEBUG] Database connector initialized for save operation...")
 
             print(f"[DEBUG] Applying {len(changes)} changes to database...")
             for i, change in enumerate(changes):
@@ -889,7 +867,7 @@ class UserRolesManager:
                     and change["new_level"] == "Level 1"
                 ):
                     # Clear password and 2FA secret for demoted users
-                    cursor.execute(
+                    connector.execute_query(
                         "UPDATE [Emp_list] SET [Access Level]=?, [Password]=?, [2FA Secret]=? WHERE [Username]=?",
                         (change["new_level"], None, None, change["username"]),
                     )
@@ -898,15 +876,11 @@ class UserRolesManager:
                     )
                 else:
                     # Normal access level update without clearing credentials
-                    cursor.execute(
+                    connector.execute_query(
                         "UPDATE [Emp_list] SET [Access Level]=? WHERE [Username]=?",
                         (change["new_level"], change["username"]),
                     )
 
-                # Commit after each change to prevent large transaction locks
-                conn.commit()
-
-            cursor.close()
             print("[DEBUG] Database changes completed successfully")
 
             # Count demotions for success message
@@ -936,13 +910,13 @@ class UserRolesManager:
             print(f"[DEBUG] Save error: {e}")
             messagebox.showerror("Error", f"Failed to save changes: {e}")
         finally:
-            if conn:
-                try:
-                    conn.close()
+            try:
+                if 'connector' in locals() and connector:
+                    connector.close()
                     print("[DEBUG] Database connection closed")
-                except Exception as close_error:
-                    print(f"[DEBUG] Error closing database connection: {close_error}")
-                    pass
+            except Exception as close_error:
+                print(f"[DEBUG] Error closing database connection: {close_error}")
+                pass
 
     def authenticate_sensitive_changes(self, sensitive_changes):
         """Require password and 2FA authentication from users being demoted"""
@@ -1326,23 +1300,15 @@ The user being demoted must provide their credentials to surrender their current
         self, target_username, password, tfa_code, auth_method
     ):
         """Verify the target user's credentials using either password OR 2FA"""
-        conn = None
         try:
-            db_path = get_db_path()
-
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-                f"DBQ={db_path};"
-            )
-
-            conn = pyodbc.connect(conn_str)
-            cursor = conn.cursor()
-            cursor.execute(
+            # Use the connector
+            connector = get_connector()
+            
+            # Query the database using the connector
+            row = connector.fetchone(
                 "SELECT [Password], [2FA Secret] FROM [Emp_list] WHERE [Username]=?",
                 (target_username,),
             )
-            row = cursor.fetchone()
-            cursor.close()
 
             if not row:
                 return False
@@ -1380,31 +1346,24 @@ The user being demoted must provide their credentials to surrender their current
             print(f"[DEBUG] Target user flexible authentication error: {e}")
             return False
         finally:
-            if conn:
-                try:
-                    conn.close()
-                except Exception as close_err:
-                    print(f"[DEBUG] Error closing connection: {close_err}")
+            try:
+                if 'connector' in locals() and connector:
+                    connector.close()
+            except Exception as close_err:
+                print(f"[DEBUG] Error closing connection: {close_err}")
 
     def verify_target_user_credentials(self, target_username, password, tfa_code):
         """Verify the target user's password and 2FA code (the user being demoted)"""
         try:
-            db_path = get_db_path()
-
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-                f"DBQ={db_path};"
-            )
-
-            conn = pyodbc.connect(conn_str)
-            cursor = conn.cursor()
-            cursor.execute(
+            # Use the connector
+            connector = get_connector()
+            
+            # Query the database using the connector
+            row = connector.fetchone(
                 "SELECT [Password], [2FA Secret] FROM [Emp_list] WHERE [Username]=?",
                 (target_username,),
             )
-            row = cursor.fetchone()
-            cursor.close()
-            conn.close()
+            connector.close()
 
             if not row:
                 return False
@@ -1473,21 +1432,15 @@ The user being demoted must provide their credentials to surrender their current
 
         # Get current admin's display name
         try:
-            db_path = get_db_path()
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-                f"DBQ={db_path};"
-            )
-
-            conn = pyodbc.connect(conn_str)
-            cursor = conn.cursor()
-            cursor.execute(
+            # Use the connector
+            connector = get_connector()
+            
+            # Query the database using the connector
+            row = connector.fetchone(
                 "SELECT [First Name], [Last Name] FROM [Emp_list] WHERE [Username]=?",
                 (current_username,),
             )
-            row = cursor.fetchone()
-            cursor.close()
-            conn.close()
+            connector.close()
 
             if row:
                 admin_display_name = f"{row[0] or ''} {row[1] or ''}".strip()
@@ -1962,18 +1915,11 @@ The user being demoted must provide their credentials to surrender their current
             if not result:
                 return
 
-        # Apply changes to database
-        conn = None
+        # Apply changes to database using the connector
         try:
-            db_path = get_db_path()
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-                f"DBQ={db_path};"
-            )
-
-            print("[DEBUG] Connecting to database (simplified mode)...")
-            conn = pyodbc.connect(conn_str)
-            cursor = conn.cursor()
+            # Initialize connector
+            connector = get_connector()
+            print("[DEBUG] Database connector initialized (simplified mode)...")
 
             for i, change in enumerate(changes):
                 print(
@@ -1986,7 +1932,7 @@ The user being demoted must provide their credentials to surrender their current
                     and change["new_level"] == "Level 1"
                 ):
                     # Clear password and 2FA secret for demoted users (security measure)
-                    cursor.execute(
+                    connector.execute_query(
                         "UPDATE [Emp_list] SET [Access Level]=?, [Password]=?, [2FA Secret]=? WHERE [Username]=?",
                         (change["new_level"], None, None, change["username"]),
                     )
@@ -2029,7 +1975,7 @@ The user being demoted must provide their credentials to surrender their current
                         print(
                             f"[DEBUG] Updating access level for: {setup_info['username']}"
                         )
-                        cursor.execute(
+                        connector.execute_query(
                             "UPDATE [Emp_list] SET [Access Level]=? WHERE [Username]=?",
                             (change["new_level"], setup_info["username"]),
                         )
@@ -2055,14 +2001,11 @@ The user being demoted must provide their credentials to surrender their current
 
                 else:
                     # Normal access level update without credential changes
-                    cursor.execute(
+                    connector.execute_query(
                         "UPDATE [Emp_list] SET [Access Level]=? WHERE [Username]=?",
                         (change["new_level"], change["username"]),
                     )
 
-                conn.commit()
-
-            cursor.close()
             print("[DEBUG] Simplified save completed successfully")
 
             # Show 2FA setup information for promoted users
@@ -2125,14 +2068,14 @@ The user being demoted must provide their credentials to surrender their current
             print(f"[DEBUG] Simplified save error: {e}")
             messagebox.showerror("Error", f"Failed to save changes: {e}")
         finally:
-            if conn:
-                try:
-                    conn.close()
+            try:
+                if 'connector' in locals() and connector:
+                    connector.close()
                     print("[DEBUG] Simplified database connection closed")
-                except Exception as close_err:
-                    print(
-                        f"[DEBUG] Error closing simplified save connection: {close_err}"
-                    )
+            except Exception as close_err:
+                print(
+                    f"[DEBUG] Error closing simplified save connection: {close_err}"
+                )
 
     def on_right_click(self, event):
         """Show context menu on right-click for the user tree.
@@ -2266,22 +2209,20 @@ The user being demoted must provide their credentials to surrender their current
     def check_username_exists(self, username):
         """Check if a username already exists in the database"""
         try:
-            db_path = get_db_path()
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-                f"DBQ={db_path};"
+            # Use the connector
+            connector = get_connector()
+            
+            # Query the database
+            result = connector.fetchone(
+                "SELECT COUNT(*) FROM [Emp_list] WHERE [Username]=?", 
+                (username,)
             )
-
-            conn = pyodbc.connect(conn_str)
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT COUNT(*) FROM [Emp_list] WHERE [Username]=?", (username,)
-            )
-            count = cursor.fetchone()[0]
-            cursor.close()
-            conn.close()
-
-            return count > 0
+            
+            connector.close()
+            
+            if result:
+                return result[0] > 0
+            return False
         except Exception as e:
             print(f"[DEBUG] Error checking username existence: {e}")
             return False
@@ -2290,25 +2231,11 @@ The user being demoted must provide their credentials to surrender their current
         self, old_username, new_username, password, setup_2fa=False
     ):
         """Update user credentials in the database"""
-        conn = None
+        connector = None
         try:
             print(
                 f"[DEBUG] Starting credential update for user: {old_username} -> {new_username}"
             )
-
-            # Prefer canonical database path and fall back to historical legacy location if needed
-            db_path = get_db_path()
-            if not os.path.exists(db_path):
-                # Enforce canonical database usage. Do not fall back to legacy Employee List.accdb.
-                error_msg = (
-                    f"Database file not found: {db_path}\n"
-                    "Please ensure 'database/JJCIMS.accdb' is present in the application folder."
-                )
-                print(f"[DEBUG] {error_msg}")
-                messagebox.showerror("Database Error", error_msg)
-                return {"success": False, "error": error_msg}
-
-            print(f"[DEBUG] Using database path: {db_path}")
 
             # Encrypt password using helper method
             encrypted_password = self._encrypt_password(password)
@@ -2323,118 +2250,81 @@ The user being demoted must provide their credentials to surrender their current
                 encrypted_otp_secret = self._encrypt_2fa_secret(otp_secret)
                 print("[DEBUG] 2FA secret generated and encrypted")
 
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-                f"DBQ={db_path};"
+            print("[DEBUG] Initializing database connector...")
+            connector = get_connector()
+
+            # First, check if the old username exists
+            result = connector.fetchone(
+                "SELECT COUNT(*) FROM [Emp_list] WHERE [Username]=?",
+                (old_username,)
             )
-
-            print("[DEBUG] Connecting to database...")
-
-            try:
-                conn = pyodbc.connect(conn_str)
-                cursor = conn.cursor()
-
-                # First, check if the old username exists
-                cursor.execute(
-                    "SELECT COUNT(*) FROM [Emp_list] WHERE [Username]=?",
-                    (old_username,),
-                )
-                if cursor.fetchone()[0] == 0:
-                    error_msg = (
-                        f"Original username '{old_username}' not found in database"
-                    )
-                    print(f"[DEBUG] {error_msg}")
-                    return {"success": False, "error": error_msg}
-
-                # Check if new username already exists (if different from old)
-                if old_username != new_username:
-                    cursor.execute(
-                        "SELECT COUNT(*) FROM [Emp_list] WHERE [Username]=?",
-                        (new_username,),
-                    )
-                    if cursor.fetchone()[0] > 0:
-                        error_msg = (
-                            f"New username '{new_username}' already exists in database"
-                        )
-                        print(f"[DEBUG] {error_msg}")
-                        return {"success": False, "error": error_msg}
-
-                # Update user credentials with verbose logging
-                rows_affected = 0
-                if setup_2fa:
-                    print("[DEBUG] Updating credentials with 2FA")
-                    cursor.execute(
-                        "UPDATE [Emp_list] SET [Username]=?, [Password]=?, [2FA Secret]=? WHERE [Username]=?",
-                        (
-                            new_username,
-                            encrypted_password,
-                            encrypted_otp_secret,
-                            old_username,
-                        ),
-                    )
-                    rows_affected = cursor.rowcount
-                else:
-                    print("[DEBUG] Updating credentials without 2FA")
-                    cursor.execute(
-                        "UPDATE [Emp_list] SET [Username]=?, [Password]=? WHERE [Username]=?",
-                        (new_username, encrypted_password, old_username),
-                    )
-                    rows_affected = cursor.rowcount
-
-                if rows_affected == 0:
-                    # No rows were updated - this is a problem
-                    error_msg = f"Update operation affected 0 rows. Username '{old_username}' may not exist."
-                    print(f"[DEBUG] {error_msg}")
-                    return {"success": False, "error": error_msg}
-
-                print(f"[DEBUG] Successfully updated {rows_affected} row(s)")
-                print("[DEBUG] Committing changes to database...")
-                conn.commit()
-                cursor.close()
-                print("[DEBUG] Database update completed, changes committed")
-
-                # Double-check the update by querying for the new username
-                verify_cursor = conn.cursor()
-                verify_cursor.execute(
-                    "SELECT COUNT(*) FROM [Emp_list] WHERE [Username]=?",
-                    (new_username,),
-                )
-                found = verify_cursor.fetchone()[0]
-                verify_cursor.close()
-
-                if found == 0 and old_username != new_username:
-                    error_msg = f"Verification failed: Username '{new_username}' not found after update"
-                    print(f"[DEBUG] {error_msg}")
-                    return {"success": False, "error": error_msg}
-
-                print(
-                    f"[DEBUG] Successfully updated and verified credentials for user: {new_username}"
-                )
-
-                # Return 2FA setup info if applicable
-                if setup_2fa and otp_secret:
-                    print("[DEBUG] Returning success with 2FA secret")
-                    return {"success": True, "otp_secret": otp_secret}
-                else:
-                    print("[DEBUG] Returning success without 2FA")
-                    return {"success": True}
-
-            except pyodbc.Error as db_error:
-                error_msg = f"Database error: {db_error}"
+            if not result or result[0] == 0:
+                error_msg = f"Original username '{old_username}' not found in database"
                 print(f"[DEBUG] {error_msg}")
                 return {"success": False, "error": error_msg}
+
+            # Check if new username already exists (if different from old)
+            if old_username != new_username:
+                result = connector.fetchone(
+                    "SELECT COUNT(*) FROM [Emp_list] WHERE [Username]=?",
+                    (new_username,)
+                )
+                if result and result[0] > 0:
+                    error_msg = f"New username '{new_username}' already exists in database"
+                    print(f"[DEBUG] {error_msg}")
+                    return {"success": False, "error": error_msg}
+
+            # Update user credentials with verbose logging
+            if setup_2fa:
+                print("[DEBUG] Updating credentials with 2FA")
+                connector.execute_query(
+                    "UPDATE [Emp_list] SET [Username]=?, [Password]=?, [2FA Secret]=? WHERE [Username]=?",
+                    (
+                        new_username,
+                        encrypted_password,
+                        encrypted_otp_secret,
+                        old_username,
+                    )
+                )
+            else:
+                print("[DEBUG] Updating credentials without 2FA")
+                connector.execute_query(
+                    "UPDATE [Emp_list] SET [Username]=?, [Password]=? WHERE [Username]=?",
+                    (new_username, encrypted_password, old_username)
+                )
+
+            # Double-check the update by querying for the new username
+            result = connector.fetchone(
+                "SELECT COUNT(*) FROM [Emp_list] WHERE [Username]=?",
+                (new_username,)
+            )
+            
+            if (not result or result[0] == 0) and old_username != new_username:
+                error_msg = f"Verification failed: Username '{new_username}' not found after update"
+                print(f"[DEBUG] {error_msg}")
+                return {"success": False, "error": error_msg}
+
+            print(f"[DEBUG] Successfully updated and verified credentials for user: {new_username}")
+
+            # Return 2FA setup info if applicable
+            if setup_2fa and otp_secret:
+                print("[DEBUG] Returning success with 2FA secret")
+                return {"success": True, "otp_secret": otp_secret}
+            else:
+                print("[DEBUG] Returning success without 2FA")
+                return {"success": True}
 
         except Exception as e:
             print(f"[DEBUG] Error updating user credentials: {e}")
             return {"success": False, "error": str(e)}
         finally:
-            if conn:
-                try:
-                    conn.close()
+            try:
+                if connector:
+                    connector.close()
                     print("[DEBUG] Database connection closed in finally block")
-                except Exception as close_error:
-                    print(f"[DEBUG] Error closing database connection: {close_error}")
-                    pass
+            except Exception as close_error:
+                print(f"[DEBUG] Error closing database connection: {close_error}")
+                pass
 
     def show_2fa_setup_info(self, username, otp_secret):
         """Show 2FA setup information to the admin"""
@@ -2445,34 +2335,61 @@ The user being demoted must provide their credentials to surrender their current
         """Test database connection to help debug freezing issues"""
         try:
             print("[DEBUG] Testing database connection...")
-            db_path = get_db_path()
-            print(f"[DEBUG] Database path: {db_path}")
-
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-                f"DBQ={db_path};"
-            )
-
-            print("[DEBUG] Attempting connection...")
-            conn = pyodbc.connect(conn_str)
-            print("[DEBUG] Connection successful")
-
-            cursor = conn.cursor()
-            print("[DEBUG] Cursor created")
-
-            cursor.execute("SELECT COUNT(*) FROM [Emp_list]")
-            count = cursor.fetchone()[0]
-            print(f"[DEBUG] Query executed, found {count} records")
-
-            cursor.close()
-            conn.close()
+            
+            # Use the standard connector from backend.database
+            connector = get_connector()
+            print("[DEBUG] Connector initialized")
+            
+            # Use connector to execute query
+            result = connector.fetchone("SELECT COUNT(*) FROM [Emp_list]")
+            if result:
+                count = result[0]
+                print(f"[DEBUG] Query executed, found {count} records")
+            else:
+                print("[DEBUG] Query executed but returned no results")
+            
+            # Close the connector
+            connector.close()
             print("[DEBUG] Connection closed successfully")
-
+            
             return True
 
         except Exception as e:
             print(f"[DEBUG] Database connection test failed: {e}")
             return False
+
+    def add_employee_to_database(self, first_name, last_name, username, password, access_level):
+        """Add a new employee to the database using the connector"""
+        try:
+            # Initialize connector
+            connector = get_connector()
+            
+            # Check if username already exists
+            result = connector.fetchone(
+                "SELECT COUNT(*) FROM [Emp_list] WHERE [Username]=?", 
+                (username,)
+            )
+            
+            if result and result[0] > 0:
+                connector.close()
+                return False, "Username already exists"
+            
+            # Encrypt password
+            encrypted_password = self._encrypt_password(password)
+            
+            # Add the employee
+            connector.execute_query(
+                "INSERT INTO [Emp_list] ([First Name], [Last Name], [Username], [Password], [Access Level]) VALUES (?, ?, ?, ?, ?)",
+                (first_name, last_name, username, encrypted_password, access_level)
+            )
+            
+            # Close connection
+            connector.close()
+            
+            return True, "Employee added successfully"
+        except Exception as e:
+            print(f"[DEBUG] Error adding employee: {e}")
+            return False, str(e)
 
     def filter_users(self, *args):
         """Filter users based on search query"""
@@ -2712,22 +2629,20 @@ The user being demoted must provide their credentials to surrender their current
     def get_user_count_by_level(self, level):
         """Get count of users by access level"""
         try:
-            db_path = get_db_path()
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-                f"DBQ={db_path};"
+            # Use the connector
+            connector = get_connector()
+            
+            # Query the database
+            result = connector.fetchone(
+                "SELECT COUNT(*) FROM [Emp_list] WHERE [Access Level]=?", 
+                (level,)
             )
-
-            conn = pyodbc.connect(conn_str)
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT COUNT(*) FROM [Emp_list] WHERE [Access Level]=?", (level,)
-            )
-            count = cursor.fetchone()[0]
-            cursor.close()
-            conn.close()
-
-            return count
+            
+            connector.close()
+            
+            if result:
+                return result[0]
+            return 0
 
         except Exception as e:
             print(f"[DEBUG] Error getting user count by level: {e}")

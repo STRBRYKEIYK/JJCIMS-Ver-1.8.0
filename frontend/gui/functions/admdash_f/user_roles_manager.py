@@ -14,6 +14,12 @@ class UserRolesManager:
         self.original_user_data = {}
         self.save_roles_btn = None
         self.cancel_roles_btn = None
+        # Sorting state
+        self.sort_column = None
+        self.sort_reverse = False
+        # Change tracking
+        self.has_pending_changes = False
+        self.pending_changes = {}
         # Wizard / state placeholders
         self._wizard_frame = None
         self._wizard_content = None
@@ -1211,11 +1217,11 @@ class UserRolesManager:
         except Exception:
             pass
 
-        from backend.database import get_connector, get_db_path
+        from backend.database import get_connector
 
         connector = None
         try:
-            connector = get_connector(get_db_path())
+            connector = get_connector()
             rows = connector.fetchall(
                 "SELECT [Last Name], [First Name], [Middle Name], [Username], [Access Level] FROM [emp_list] ORDER BY [Last Name], [First Name]"
             )

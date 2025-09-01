@@ -88,7 +88,11 @@ if __name__ == "__main__":
         print("Starting JJCIMS application...")
         print(f"Python version: {sys.version}")
         print(f"Current directory: {os.getcwd()}")
-        print(f"Database path: {get_db_path()}")
+        db_path = get_db_path()
+        if os.path.exists(db_path):
+            print(f"Database path: {db_path}")
+        else:
+            print(f"WARNING: Database not found at {db_path}")
         
         app = WelcomeWindow()
         app.run()
