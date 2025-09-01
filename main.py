@@ -85,7 +85,15 @@ extract_resource("JJCIMS(2).ico", main_icon_path)
 if __name__ == "__main__":
     # Initialize and start the main application directly
     try:
+        print("Starting JJCIMS application...")
+        print(f"Python version: {sys.version}")
+        print(f"Current directory: {os.getcwd()}")
+        print(f"Database path: {get_db_path()}")
+        
         app = WelcomeWindow()
         app.run()
     except Exception as e:
+        import traceback
         print(f"Error starting main application: {e}")
+        print("Detailed traceback:")
+        traceback.print_exc()
