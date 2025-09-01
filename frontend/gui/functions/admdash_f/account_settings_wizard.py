@@ -2,10 +2,9 @@ import os
 import tkinter as tk
 from tkinter import messagebox, ttk
 import importlib.util
-import pyodbc
 from cryptography.fernet import Fernet
 from datetime import datetime
-from backend.database import get_db_path
+from backend.database import get_db_path, get_connector
 
 
 class AccountSettingsWizard:
@@ -127,17 +126,14 @@ class AccountSettingsWizard:
             self.status_label.config(text="No username in session.")
             return
         try:
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-                f"DBQ={self.db_path};"
-            )
-            conn = pyodbc.connect(conn_str)
-            cur = conn.cursor()
-            cur.execute(
+            # Use connector pattern instead of direct database access
+            connector = get_connector(self.db_path)
+            
+            # Get user data using connector's API
+            row = connector.fetchone(
                 "SELECT [First Name], [Last Name], [Username], [Password] FROM [emp_list] WHERE [Username]=?",
-                (self.username,),
+                (self.username,)
             )
-            row = cur.fetchone()
             if row:
                 self.first_name_var.set(row[0] or "")
                 self.last_name_var.set(row[1] or "")
@@ -149,8 +145,7 @@ class AccountSettingsWizard:
                 if hasattr(self, "_masked_pw_var"):
                     self._masked_pw_var.set("•" * 10 if self.password_var.get() else "")
                 self._store_original()
-            cur.close()
-            conn.close()
+            
             self._loaded = True
             self.status_label.config(
                 text="Loaded at " + datetime.now().strftime("%H:%M:%S")
@@ -489,31 +484,27 @@ class AccountSettingsWizard:
             ):
                 messagebox.showerror("Error", "All fields are required.")
                 return
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-                f"DBQ={self.db_path};"
-            )
-            conn = pyodbc.connect(conn_str)
-            cur = conn.cursor()
+            # Use connector pattern instead of direct database access
+            connector = get_connector(self.db_path)
+            
             encrypted_pw = self._encrypt_password(self.password_var.get().strip())
             original_username = getattr(self.app.parent, "username", self.username)
-            cur.execute(
+            
+            # Execute update using connector's API
+            connector.execute_query(
                 """
                 UPDATE [emp_list]
                 SET [First Name]=?, [Last Name]=?, [Username]=?, [Password]=?
                 WHERE [Username]=?
-            """,
+                """,
                 (
                     self.first_name_var.get().strip(),
                     self.last_name_var.get().strip(),
                     self.username_var.get().strip(),
                     encrypted_pw,
                     original_username,
-                ),
+                )
             )
-            conn.commit()
-            cur.close()
-            conn.close()
             if hasattr(self.app.parent, "username"):
                 self.app.parent.username = self.username_var.get().strip()
             self.username = self.app.parent.username

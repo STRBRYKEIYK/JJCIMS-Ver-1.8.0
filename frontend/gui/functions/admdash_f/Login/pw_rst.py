@@ -1,5 +1,10 @@
 from pathlib import Path
 from tkinter import Tk, Canvas, Entry, Button, PhotoImage, Toplevel
+from cryptography.fernet import Fernet
+import pyotp
+
+# Import connector pattern for database access
+from backend.database import get_connector
 
 # Asset paths for each page
 ASSETS_BASE = Path(__file__).parent / ".." / ".." / ".." / ".." / "assets" / "Pw_rst_assets"
@@ -10,13 +15,6 @@ PAGE_ASSETS = [
 
 def relative_to_assets(path: str, assets_path: Path) -> Path:
     return assets_path / Path(path)
-
-
-import pyodbc
-from tkinter import messagebox
-from cryptography.fernet import Fernet
-import pyotp
-import threading
 
 class PasswordResetWizard:
     # Removed create_rounded_rectangle; using standard rectangles for outlines
@@ -157,14 +155,10 @@ class PasswordResetWizard:
                 return
                 
             try:
-                conn_str = (
-                    r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};'
-                    f'DBQ={self.DB_PATH};'
-                )
-                with pyodbc.connect(conn_str) as conn:
-                    cursor = conn.cursor()
-                    cursor.execute("SELECT [2FA Secret], [Access Level] FROM [Emp_list] WHERE LCase([Username])=?", (username.lower(),))
-                    row = cursor.fetchone()
+                # Use connector pattern instead of direct database access
+                from backend.database import get_connector
+                connector = get_connector(self.DB_PATH)
+                row = connector.fetchone("SELECT [2FA Secret], [Access Level] FROM [Emp_list] WHERE LCase([Username])=?", (username.lower(),))
                 if row and row[0] and row[1] in ('Level 2', 'Level 3'):
                     try:
                         secret = self.decrypt_2fa(row[0])
@@ -228,15 +222,14 @@ class PasswordResetWizard:
                 self.show_toast("Passwords do not match.")
                 return
             try:
-                conn_str = (
-                    r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};'
-                    f'DBQ={self.DB_PATH};'
+                # Use connector pattern instead of direct database access
+                from backend.database import get_connector
+                connector = get_connector(self.DB_PATH)
+                encrypted_pw = self.fernet.encrypt(new_pw.encode()).decode()
+                connector.execute_query(
+                    "UPDATE [Emp_list] SET [Password]=? WHERE LCase([Username])=?", 
+                    (encrypted_pw, self.username.lower())
                 )
-                with pyodbc.connect(conn_str) as conn:
-                    cursor = conn.cursor()
-                    encrypted_pw = self.fernet.encrypt(new_pw.encode()).decode()
-                    cursor.execute("UPDATE [Emp_list] SET [Password]=? WHERE LCase([Username])=?", (encrypted_pw, self.username.lower()))
-                    conn.commit()
                 self.show_toast("Password reset successful!", color="#388e3c", duration=2000)
                 # Close after 3 seconds
                 self.modal.after(2000, self.modal.destroy)

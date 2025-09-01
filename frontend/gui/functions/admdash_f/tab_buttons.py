@@ -1,7 +1,6 @@
 import tkinter as tk
 from PIL import Image, ImageDraw, ImageFont, ImageTk
 from backend.utils.font_utils import get_bold_font
-import pyodbc
 from backend.database import get_db_path
 
 
@@ -11,26 +10,23 @@ def execute_access_queries():
         # Get database path
         db_path = get_db_path()
 
-        # Connect to database
-        conn_str = f"DRIVER={{Microsoft Access Driver (*.mdb, *.accdb)}};DBQ={db_path};"
-        conn = pyodbc.connect(conn_str)
-        cursor = conn.cursor()
-
+        # Connect using connector pattern that abstracts database type
+        from backend.database import get_connector
+        connector = get_connector(db_path)
+        
         # Execute Update Status query
-        print("[DEBUG] Executing 'Update Status' query from Access database...")
-        cursor.execute("EXEC [Update Status]")
-        conn.commit()
+        print("[DEBUG] Executing 'Update Status' query...")
+        connector.execute_query("EXEC [Update Status]")
         print("[DEBUG] 'Update Status' query executed successfully")
 
         # Execute statssum query
-        print("[DEBUG] Executing 'statssum' query from Access database...")
-        cursor.execute("EXEC statssum")
-        conn.commit()
+        print("[DEBUG] Executing 'statssum' query...")
+        connector.execute_query("EXEC statssum")
         print("[DEBUG] 'statssum' query executed successfully")
 
     except Exception as e:
-        print(f"[ERROR] Failed to execute Access queries: {e}")
-        # Try fallback SQL if Access queries fail
+        print(f"[ERROR] Failed to execute queries: {e}")
+        # Try fallback SQL if queries fail
         try:
             print("[DEBUG] Attempting fallback SQL execution...")
             fallback_sql = """
@@ -38,14 +34,11 @@ def execute_access_queries():
             SET STATUS = IIf(BALANCE > 0 AND BALANCE <= [MIN STOCK], 'Low in Stock', IIf(BALANCE = 0, 'Out of Stock', 'In Stock'))
             WHERE BALANCE IS NOT NULL AND [MIN STOCK] IS NOT NULL;
             """
-            cursor.execute(fallback_sql)
-            conn.commit()
+            connector = get_connector(get_db_path())  # Get a fresh connector
+            connector.execute_query(fallback_sql)
             print("[DEBUG] Fallback SQL executed successfully")
         except Exception as fallback_error:
             print(f"[ERROR] Fallback SQL also failed: {fallback_error}")
-    finally:
-        if "conn" in locals():
-            conn.close()
 
 
 def create_frame_outline(

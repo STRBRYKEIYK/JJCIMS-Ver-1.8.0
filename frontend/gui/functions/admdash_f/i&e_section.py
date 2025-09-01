@@ -14,24 +14,19 @@ from tkinter import (
 import tkinter as tk
 import os
 import shutil
-from backend.database import get_db_path
+import csv
+from backend.database import get_db_path, get_connector
 
 # Optional dependencies
 try:
     import openpyxl  # type: ignore
-
     HAS_OPENPYXL = True
 except Exception:
     openpyxl = None  # type: ignore[assignment]
     HAS_OPENPYXL = False
-try:
-    import pyodbc  # type: ignore
-
-    HAS_PYODBC = True
-except Exception:
-    pyodbc = None  # type: ignore[assignment]
-    HAS_PYODBC = False
-import csv
+    
+# We don't directly use pyodbc anymore - using connector pattern instead
+HAS_PYODBC = True  # Assume availability via connector pattern
 
 
 class ImportExport(Frame):
@@ -122,41 +117,29 @@ class ImportFrame(Frame):
     def validate_access_db(self, file_path, file_name):
         """Validate Access database files"""
         try:
-            if not HAS_PYODBC or pyodbc is None:  # type: ignore[truthy-bool]
-                return False, "Access DB validation requires 'pyodbc' to be installed."
-            conn_str = (
-                f"DRIVER={{Microsoft Access Driver (*.mdb, *.accdb)}};DBQ={file_path};"
-            )
-            conn = pyodbc.connect(conn_str)
-            cursor = conn.cursor()
-
+            # Use connector pattern instead of direct database access
+            connector = get_connector(file_path)
+            
             if file_name == "JJCIMS.accdb":
                 # Check for required tables in JJCIMS database
                 required_tables = ["ITEMSDB"]  # Add more tables as needed
-                tables = [row.table_name for row in cursor.tables(tableType="TABLE")]
                 for table in required_tables:
-                    if table not in tables:
-                        conn.close()
-                        return (
-                            False,
-                            f"Required table '{table}' not found in JJCIMS database.",
-                        )
-
+                    # Check if table exists using connector's fetchone method
+                    result = connector.fetchone("SELECT name FROM MSysObjects WHERE type=1 AND flags=0 AND name=?", (table,))
+                    if not result:
+                        return False, f"Required table '{table}' not found in JJCIMS database."
+                        
             elif file_name == "Employee List.accdb":
-                # Check for required tables in Employee List database (Emp_list)
+                # Check for required tables in Employee List database
                 required_tables = ["Emp_list"]  # Matches project schema
-                tables = [row.table_name for row in cursor.tables(tableType="TABLE")]
                 for table in required_tables:
-                    if table not in tables:
-                        conn.close()
-                        return (
-                            False,
-                            f"Required table '{table}' not found in Employee List database.",
-                        )
-
-            conn.close()
+                    # Check if table exists using connector's fetchone method
+                    result = connector.fetchone("SELECT name FROM MSysObjects WHERE type=1 AND flags=0 AND name=?", (table,))
+                    if not result:
+                        return False, f"Required table '{table}' not found in Employee List database."
+            
             return True, "Valid Access database."
-
+            
         except Exception as e:
             return False, f"Invalid Access database: {str(e)}"
 
@@ -1269,40 +1252,44 @@ class ExportFrame(Frame):
             )
 
     def _export_table_to_csv(self, accdb_path: Path, table: str, csv_path: str):
-        if not HAS_PYODBC or pyodbc is None:  # type: ignore[truthy-bool]
-            raise RuntimeError(
-                "CSV export from Access requires 'pyodbc' to be installed."
-            )
-        conn_str = (
-            f"DRIVER={{Microsoft Access Driver (*.mdb, *.accdb)}};DBQ={accdb_path};"
-        )
-        conn = pyodbc.connect(conn_str)
-        cur = conn.cursor()
-        cur.execute(f"SELECT * FROM [{table}]")
-        columns = [c[0] for c in cur.description]
+        # Use connector pattern instead of direct database access
+        connector = get_connector(str(accdb_path))
+        
+        # Get all rows from the table
+        rows = connector.fetchall(f"SELECT * FROM [{table}]")
+        
+        # Get column names
+        if not rows:
+            raise RuntimeError(f"No data found in table '{table}'")
+            
+        # namedtuple fields for columns
+        columns = rows[0]._fields
+        
+        # Write to CSV
         with open(csv_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(columns)
-            for row in cur.fetchall():
+            for row in rows:
                 writer.writerow(list(row))
-        cur.close()
-        conn.close()
 
     def _export_table_to_excel(self, accdb_path: Path, table: str, xlsx_path: str):
-        if not HAS_PYODBC or pyodbc is None:  # type: ignore[truthy-bool]
-            raise RuntimeError(
-                "Excel export from Access requires 'pyodbc' to be installed."
-            )
         if not HAS_OPENPYXL or openpyxl is None:  # type: ignore[truthy-bool]
             raise RuntimeError("Excel export requires 'openpyxl' to be installed.")
-        conn_str = (
-            f"DRIVER={{Microsoft Access Driver (*.mdb, *.accdb)}};DBQ={accdb_path};"
-        )
-        conn = pyodbc.connect(conn_str)
-        cur = conn.cursor()
-        cur.execute(f"SELECT * FROM [{table}]")
-        columns = [c[0] for c in cur.description]
-        rows = cur.fetchall()
+        
+        # Use connector pattern instead of direct database access
+        connector = get_connector(str(accdb_path))
+        
+        # Get all rows from the table
+        rows = connector.fetchall(f"SELECT * FROM [{table}]")
+        
+        # Get column names
+        if not rows:
+            raise RuntimeError(f"No data found in table '{table}'")
+        
+        # namedtuple fields for columns
+        columns = rows[0]._fields
+        
+        # Create Excel workbook and add data
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = table
@@ -1310,8 +1297,6 @@ class ExportFrame(Frame):
         for r in rows:
             ws.append(list(r))
         wb.save(xlsx_path)
-        cur.close()
-        conn.close()
 
 
 def create_import_export_frame(parent):

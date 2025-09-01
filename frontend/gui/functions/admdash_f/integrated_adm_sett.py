@@ -1,6 +1,5 @@
 import os
 import importlib.util
-import pyodbc
 import pyotp
 import tkinter as tk
 from pathlib import Path
@@ -465,11 +464,6 @@ class IntegratedAdminSettings:
                 os.path.join(os.path.dirname(__file__), "../../../config/fernet_key.py")
             )
 
-            conn_str = (
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-                f"DBQ={db_path};"
-            )
-
             # Encrypt password
             spec = importlib.util.spec_from_file_location("fernet_key", key_path)
             fernet_key_mod = importlib.util.module_from_spec(spec)
@@ -480,27 +474,26 @@ class IntegratedAdminSettings:
 
             # Update database
             original_username = getattr(self.parent, "username", username)
-            conn = pyodbc.connect(conn_str)
-            cursor = conn.cursor()
-
-            cursor.execute(
+            
+            # Use connector pattern instead of direct database access
+            from backend.database import get_connector
+            connector = get_connector(db_path)
+            
+            # Execute query using connector's API
+            connector.execute_query(
                 """
                 UPDATE [Emp_list] 
                 SET [First Name]=?, [Last Name]=?, [Username]=?, [Password]=? 
                 WHERE [Username]=?
-            """,
+                """,
                 (
                     first_name,
                     last_name,
                     username,
                     encrypted_password,
                     original_username,
-                ),
+                )
             )
-
-            conn.commit()
-            cursor.close()
-            conn.close()
 
             # Update parent username if changed
             if hasattr(self.parent, "username"):

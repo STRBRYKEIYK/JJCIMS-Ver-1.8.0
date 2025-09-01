@@ -55,13 +55,11 @@ def load_fernet_key(fernet_key_path):
 def get_employee_list(db_path):
     employees = []
     try:
-        conn = pyodbc.connect(
-            r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=" + db_path
-        )
-        cursor = conn.cursor()
-        cursor.execute("SELECT username FROM [emp_list]")
-        employees = [row[0] for row in cursor.fetchall()]
-        conn.close()
+        from backend.database import get_connector
+        connector = get_connector(db_path)
+        # Using the connector pattern which abstracts the database type
+        result = connector.fetchall("SELECT username FROM [emp_list]")
+        employees = [row[0] for row in result]
     except Exception as e:
         print(f"Error loading employee list: {e}")
     return employees
@@ -394,21 +392,17 @@ class MultiStep2FAWizardforsett:
                     button_generate.config(state="disabled")
                     return
 
-                # Connect with explicit driver specification and error handling
-                conn_str = (
-                    r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ="
-                    + self.db_path
-                )
-                conn = pyodbc.connect(conn_str)
+                # Connect using connector pattern that abstracts database type
+                from backend.database import get_connector
+                connector = get_connector(self.db_path)
+                conn = connector.connect()
                 cursor = conn.cursor()
-
-                # Try to get the table names to verify connection works
+                
+                # Try to check if the table exists
                 try:
-                    table_names = [
-                        table.table_name for table in cursor.tables(tableType="TABLE")
-                    ]
-                    if "Emp_list" not in table_names:
-                        print(f"Available tables: {table_names}")
+                    # Check if table exists using connector's API
+                    table_exists = connector.fetchone("SELECT name FROM MSysObjects WHERE type=1 AND flags=0 AND name=?", ("Emp_list",))
+                    if not table_exists:
                         toast("Emp_list table not found in database", color="#800000")
                         button_generate.config(state="disabled")
                         conn.close()
@@ -471,20 +465,14 @@ class MultiStep2FAWizardforsett:
                     )
                     return
 
-                # Connect with explicit driver specification
-                conn_str = (
-                    r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ="
-                    + self.db_path
-                )
-                conn = pyodbc.connect(conn_str)
-                cursor = conn.cursor()
-
+                # Connect using connector pattern that abstracts database type
+                from backend.database import get_connector
+                connector = get_connector(self.db_path)
+                
                 # Execute query with proper parameterization
                 query = "SELECT [Access Level], [2FA Secret] FROM [Emp_list] WHERE username=?"
                 print(f"Executing query: {query} with parameter: {username}")
-                cursor.execute(query, (username,))
-                row = cursor.fetchone()
-                conn.close()
+                row = connector.fetchone(query, (username,))
 
                 if row:
                     access_level = row[0] if row[0] else "None"
@@ -832,17 +820,16 @@ class MultiStep2FAWizardforsett:
                 try:
                     fernet = Fernet(self.fernet_key)
                     encrypted_secret = fernet.encrypt(secret.encode()).decode("utf-8")
-                    conn = pyodbc.connect(
-                        r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ="
-                        + self.db_path
-                    )
-                    cursor = conn.cursor()
-                    cursor.execute(
+                    
+                    # Use connector pattern instead of direct pyodbc connection
+                    from backend.database import get_connector
+                    connector = get_connector(self.db_path)
+                    
+                    # Execute query using connector's API
+                    connector.execute_query(
                         "UPDATE [Emp_list] SET [2FA Secret]=? WHERE username=?",
                         (encrypted_secret, self.username),
                     )
-                    conn.commit()
-                    conn.close()
                     toast("2FA setup complete!", color="#228B22")
                     self.show_step(4)
                 except Exception as e:
@@ -1028,15 +1015,14 @@ class MultiStep2FAWizardforsett:
         # Check if user already has a 2FA secret
         already_has_2fa = False
         try:
-            conn = pyodbc.connect(
-                r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=" + self.db_path
-            )
-            cursor = conn.cursor()
-            cursor.execute(
+            from backend.database import get_connector
+            connector = get_connector(self.db_path)
+            
+            # Use connector's fetchone method
+            row = connector.fetchone(
                 "SELECT [2FA Secret] FROM [Emp_list] WHERE username=?", (self.username,)
             )
-            row = cursor.fetchone()
-            conn.close()
+            
             if row and row[0] and str(row[0]).strip():
                 already_has_2fa = True
         except Exception as e:
@@ -1080,17 +1066,16 @@ class MultiStep2FAWizardforsett:
                 try:
                     fernet = Fernet(self.fernet_key)
                     encrypted_secret = fernet.encrypt(key.encode()).decode("utf-8")
-                    conn = pyodbc.connect(
-                        r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ="
-                        + self.db_path
-                    )
-                    cursor = conn.cursor()
-                    cursor.execute(
+                    
+                    # Use connector pattern instead of direct pyodbc connection
+                    from backend.database import get_connector
+                    connector = get_connector(self.db_path)
+                    
+                    # Execute query using connector's API
+                    connector.execute_query(
                         "UPDATE [Emp_list] SET [2FA Secret]=? WHERE username=?",
                         (encrypted_secret, self.username),
                     )
-                    conn.commit()
-                    conn.close()
                     toast("2FA key imported!", color="#228B22")
                     self.show_step(4)
                 except Exception as e:
